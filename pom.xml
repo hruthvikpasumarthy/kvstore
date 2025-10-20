@@ -65,7 +65,14 @@
 			<artifactId>guava</artifactId>
 			<version>33.0.0-jre</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.32</version> <!-- Latest stable as of 2025 -->
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
 
 	<build>
 		<plugins>

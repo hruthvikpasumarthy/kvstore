@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  node1:
+    build: .
+    container_name: node1
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - NODE_ID=node1
+      - CLUSTER_NODES=http://node1:8081,http://node2:8082,http://node3:8083
+      - REPLICATION_FACTOR=3
+      - WRITE_QUORUM=2
+      - READ_QUORUM=2
+    volumes:
+      - ./data/node1:/data
+
+  node2:
+    build: .
+    container_name: node2
+    ports:
+      - "8082:8082"
+    environment:
+      - SERVER_PORT=8082
+      - NODE_ID=node2
+      - CLUSTER_NODES=http://node1:8081,http://node2:8082,http://node3:8083
+      - REPLICATION_FACTOR=3
+      - WRITE_QUORUM=2
+      - READ_QUORUM=2
+    volumes:
+      - ./data/node2:/data
+
+  node3:
+    build: .
+    container_name: node3
+    ports:
+      - "8083:8083"
+    environment:
+      - SERVER_PORT=8083
+      - NODE_ID=node3
+      - CLUSTER_NODES=http://node1:8081,http://node2:8082,http://node3:8083
+      - REPLICATION_FACTOR=3
+      - WRITE_QUORUM=2
+      - READ_QUORUM=2
+    volumes:
+      - ./data/node3:/data

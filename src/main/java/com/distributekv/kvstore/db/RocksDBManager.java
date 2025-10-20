@@ -1,6 +1,8 @@
 package com.distributekv.kvstore.db;
 
+import jakarta.annotation.PreDestroy;
 import org.rocksdb.RocksIterator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
@@ -20,23 +22,36 @@ public class RocksDBManager {
     }
 
     private RocksDB db;
+    private final Path dbPath;
 
-    public RocksDBManager() {
+    public RocksDBManager(
+            @Value("${kvstore.rocksdb.path:data}") String basePath,
+            @Value("${kvstore.nodeId}") String nodeId,
+            @Value("${server.port}") int port) {
+
         try {
-            Path dbPath = Path.of("data/rocksdb");
+            // Each node gets its own folder: data/node1/rocksdb or data/rocksdb-node1-8081
+            this.dbPath = Path.of(basePath, "rocksdb-" + nodeId + "-" + port);
             Files.createDirectories(dbPath);
+
             Options options = new Options().setCreateIfMissing(true);
             this.db = RocksDB.open(options, dbPath.toString());
+
+            System.out.println("RocksDB initialized at: " + dbPath.toAbsolutePath());
+
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize RocksDB", e);
+            throw new RuntimeException("Failed to initialize RocksDB for node: " + nodeId, e);
         }
     }
+
 
     public RocksDB getDB() {
         return db;
     }
 
-    /** Save or update a key-value pair */
+    /**
+     * Save or update a key-value pair
+     */
     public void put(String key, String value) {
         try {
             db.put(key.getBytes(), value.getBytes());
@@ -45,7 +60,9 @@ public class RocksDBManager {
         }
     }
 
-    /** Retrieve value for a key */
+    /**
+     * Retrieve value for a key
+     */
     public String get(String key) {
         try {
             byte[] value = db.get(key.getBytes());
@@ -55,7 +72,9 @@ public class RocksDBManager {
         }
     }
 
-    /** Delete a key-value pair */
+    /**
+     * Delete a key-value pair
+     */
     public void delete(String key) {
         try {
             db.delete(key.getBytes());
@@ -77,10 +96,11 @@ public class RocksDBManager {
     }
 
 
-
+    @PreDestroy
     public void close() {
         if (db != null) {
             db.close();
+            System.out.println("🧹 Closed RocksDB at: " + dbPath.toAbsolutePath());
         }
     }
 }
